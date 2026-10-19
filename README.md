@@ -14,8 +14,17 @@ RailFlow is a multi-tenant web platform that railway, coach and intercity-bus op
 [![FastAPI](https://img.shields.io/badge/FastAPI-Python_3.12-009688?style=flat-square&logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com)
 [![PostgreSQL 17](https://img.shields.io/badge/PostgreSQL-17_+_RLS-4169E1?style=flat-square&logo=postgresql&logoColor=white)](https://www.postgresql.org)
 
+## Live preview (GitHub Pages)
+
+The showcase runs directly in the browser — no Docker required:
+
+- **Homepage** — https://m0-ar.github.io/railway-saas/
+- **Quick preview** — https://m0-ar.github.io/railway-saas/preview.html
+- **Docs preview** — https://m0-ar.github.io/railway-saas/docs/preview.html
+
 ## Contents
 
+- [Live preview](#live-preview-github-pages)
 - [Why teams switch](#why-teams-switch)
 - [Quick start (60 seconds)](#quick-start-60-seconds)
 - [Screenshots](#screenshots)
