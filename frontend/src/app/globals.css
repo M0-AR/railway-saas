@@ -1,0 +1,341 @@
+@import "tailwindcss";
+
+/* ===========================================================================
+   RailFlow design tokens v2
+   Verified source: docs/UI-REDESIGN-RESEARCH.md (October 2026)
+   Layer 1 primitives -> Layer 2 semantic -> Layer 3 component utilities.
+   Never hand-type a value in components (STD-visual-details-26).
+   =========================================================================== */
+
+@theme inline {
+  /* --- semantic color utilities ------------------------------------------ */
+  --color-background: var(--bg);
+  --color-foreground: var(--fg);
+  --color-card: var(--surface);
+  --color-card-foreground: var(--fg);
+  --color-surface-2: var(--surface-2);
+  --color-surface-3: var(--surface-3);
+  --color-border: var(--border-c);
+  --color-muted-foreground: var(--muted);
+  --color-faint-foreground: var(--faint);
+  --color-brand: var(--brand);
+  --color-brand-soft: var(--brand-soft);
+  --color-brand-2: var(--brand-2);
+  --color-danger: var(--danger);
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+
+  /* --- type -------------------------------------------------------------- */
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, -apple-system, "Segoe UI",
+    Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif, "Apple Color Emoji",
+    "Segoe UI Emoji";
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+
+  /* --- motion (locked, docs §6) ------------------------------------------ */
+  --ease-enter: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-standard: cubic-bezier(0.77, 0, 0.175, 1);
+  --ease-hover: cubic-bezier(0.25, 0.1, 0.25, 1);
+  --ease-drawer: cubic-bezier(0.32, 0.72, 0, 1);
+
+  --animate-skeleton: skeleton-pulse 1.5s var(--ease-hover) infinite;
+}
+
+:root {
+  /* --- primitives ---------------------------------------------------------
+     OKLCH neutrals at hue 280; lightness = elevation steps (docs §2).
+     Surface ladder: base .14 -> card .18 -> overlay .24 -> active .32. */
+  --neutral-0: oklch(0.14 0.01 280);
+  --neutral-1: oklch(0.18 0.012 280);
+  --neutral-2: oklch(0.24 0.014 280);
+  --neutral-3: oklch(0.32 0.016 280);
+  --ink-0: oklch(0.93 0.01 280);
+  --ink-1: oklch(0.72 0.015 280);
+  --ink-2: oklch(0.61 0.015 280); /* AA 4.5:1 on base and card */
+  --accent-0: oklch(0.63 0.19 281); /* #6d5efc in OKLCH, darkened 15% C, +.04 L for dark */
+  --accent-1: oklch(0.74 0.13 281);
+  --accent-2: oklch(0.79 0.14 205); /* #22d3ee */
+
+  /* status (kept readable on dark; 4.5:1 vs base) */
+  --danger-0: oklch(0.71 0.16 22);
+  --success-0: oklch(0.78 0.15 155);
+  --warning-0: oklch(0.82 0.13 85);
+
+  --hairline: oklch(1 0 0 / 8%);
+  --hairline-strong: oklch(1 0 0 / 12%);
+
+  /* --- semantic --------------------------------------------------------- */
+  --bg: var(--neutral-0);
+  --surface: var(--neutral-1);
+  --surface-2: var(--neutral-2);
+  --surface-3: var(--neutral-3);
+  --fg: var(--ink-0);
+  --muted: var(--ink-1);
+  --faint: var(--ink-2);
+  --border-c: var(--hairline);
+  --brand: var(--accent-0);
+  --brand-soft: var(--accent-1);
+  --brand-2: var(--accent-2);
+  --danger: var(--danger-0);
+  --success: var(--success-0);
+  --warning: var(--warning-0);
+
+  /* --- motion durations (locked, docs §6) ------------------------------- */
+  --duration-instant: 0ms;
+  --duration-micro: 100ms;
+  --duration-short: 150ms;
+  --duration-medium: 200ms;
+  --duration-long: 250ms;
+  --duration-tooltip: 125ms;
+
+  /* --- materials -------------------------------------------------------- */
+  --chrome-blur: blur(20px) saturate(180%);
+  --chrome-tint: oklch(1 0 0 / 6%);
+  --radius-ui: 8px;
+  --radius-control: 6px;
+  --radius-pill: 999px;
+
+  color-scheme: dark;
+}
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  background: var(--bg);
+  color: var(--fg);
+  font-size: 14px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  font-feature-settings: "cv11" 1; /* Inter: single-storey a off, aligns with Linear */
+}
+
+::selection {
+  background: color-mix(in oklch, var(--brand) 45%, transparent);
+}
+
+/* ---------------------------------------------------------------------------
+   Focus: one global visible ring (WCAG 2.4.7 / 1.4.11) — 2px, 2px offset.
+   Components must not remove it; only non-interactive containers opt out.
+--------------------------------------------------------------------------- */
+:focus-visible {
+  outline: 2px solid var(--brand);
+  outline-offset: 2px;
+}
+
+/* Sticky header must not cover focused content (WCAG 2.4.11). */
+html {
+  scroll-padding-top: 5rem;
+}
+
+/* ---------------------------------------------------------------------------
+   Scrollbars — thin, hairline, no track.
+--------------------------------------------------------------------------- */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: oklch(1 0 0 / 14%) transparent;
+}
+*::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+*::-webkit-scrollbar-thumb {
+  background: oklch(1 0 0 / 14%);
+  border-radius: var(--radius-pill);
+}
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+/* ---------------------------------------------------------------------------
+   Motion primitives — keyframes are used where Radix Presence must detect
+   exit (animationend). Individual `scale`/`translate` properties are animated
+   instead of `transform` so Radix popper positioning is never clobbered.
+   Values stay inside the locked token table (docs §6).
+--------------------------------------------------------------------------- */
+
+@keyframes overlay-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes overlay-out {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+@keyframes dialog-in {
+  from { opacity: 0; scale: 0.96; }
+  to { opacity: 1; scale: 1; }
+}
+@keyframes dialog-out {
+  from { opacity: 1; scale: 1; }
+  to { opacity: 0; scale: 0.96; }
+}
+@keyframes pop-in {
+  from { opacity: 0; scale: 0.95; }
+  to { opacity: 1; scale: 1; }
+}
+@keyframes pop-out {
+  from { opacity: 1; scale: 1; }
+  to { opacity: 0; scale: 0.95; }
+}
+@keyframes tooltip-in {
+  from { opacity: 0; scale: 0.97; }
+  to { opacity: 1; scale: 1; }
+}
+@keyframes tooltip-out {
+  from { opacity: 1; scale: 1; }
+  to { opacity: 0; scale: 0.97; }
+}
+@keyframes drawer-in {
+  from { opacity: 0.4; translate: -100% 0; }
+  to { opacity: 1; translate: 0 0; }
+}
+@keyframes drawer-out {
+  from { opacity: 1; translate: 0 0; }
+  to { opacity: 0.4; translate: -100% 0; }
+}
+@keyframes skeleton-pulse {
+  0%, 100% { opacity: 0.55; }
+  50% { opacity: 1; }
+}
+@keyframes fade-up {
+  from { opacity: 0; translate: 0 8px; }
+  to { opacity: 1; translate: 0 0; }
+}
+
+/* dialog: centered via individual `translate`, animated with scale+fade */
+.motion-dialog {
+  position: fixed;
+  left: 50%;
+  top: 50%;
+  translate: -50% -50%;
+}
+.motion-overlay[data-state="open"] {
+  animation: overlay-in var(--duration-medium) var(--ease-enter) both;
+}
+.motion-overlay[data-state="closed"] {
+  animation: overlay-out var(--duration-short) var(--ease-enter) both;
+}
+.motion-dialog[data-state="open"] {
+  animation: dialog-in var(--duration-long) var(--ease-enter) both;
+}
+.motion-dialog[data-state="closed"] {
+  animation: dialog-out var(--duration-medium) var(--ease-enter) both;
+}
+
+/* popovers: origin-aware (Radix exposes the transform origin per surface) */
+.motion-pop {
+  transform-origin: var(
+    --radix-dropdown-menu-content-transform-origin,
+    var(--radix-select-content-transform-origin, var(--radix-tooltip-content-transform-origin, center))
+  );
+}
+.motion-pop[data-state="open"] {
+  animation: pop-in var(--duration-medium) var(--ease-enter) both;
+}
+.motion-pop[data-state="closed"] {
+  animation: pop-out var(--duration-short) var(--ease-enter) both;
+}
+.motion-tooltip {
+  transform-origin: var(--radix-tooltip-content-transform-origin, center);
+}
+.motion-tooltip[data-state="delayed-open"],
+.motion-tooltip[data-state="instant-open"] {
+  animation: tooltip-in var(--duration-tooltip, 125ms) var(--ease-enter) both;
+}
+.motion-tooltip[data-state="closed"] {
+  animation: tooltip-out var(--duration-micro) var(--ease-enter) both;
+}
+
+/* mobile drawer: side panel, ease-drawer curve, exit ~1/3 faster */
+.motion-drawer[data-state="open"] {
+  animation: drawer-in 300ms var(--ease-drawer) both;
+}
+.motion-drawer[data-state="closed"] {
+  animation: drawer-out var(--duration-medium) var(--ease-drawer) both;
+}
+
+/* marketing reveal (rare/first-time surface only — never on app surfaces) */
+.animate-fade-up {
+  animation: fade-up 0.5s var(--ease-enter) both;
+}
+
+/* ---------------------------------------------------------------------------
+   Scroll edge — content fades as it passes under sticky chrome.
+   No permanent 1px divider (STD-visual-details-15). Progressive enhancement:
+   scroll-driven animation where supported, invisible otherwise.
+--------------------------------------------------------------------------- */
+@layer components {
+.scroll-edge {
+  position: relative;
+}
+}
+.scroll-edge::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -24px;
+  height: 24px;
+  pointer-events: none;
+  background: linear-gradient(to bottom, var(--bg), transparent);
+  opacity: 0;
+}
+@supports (animation-timeline: scroll()) {
+  .scroll-edge::after {
+    animation: scroll-edge-fade linear both;
+    animation-timeline: scroll(root block);
+  }
+}
+@keyframes scroll-edge-fade {
+  0% { opacity: 0; }
+  5% { opacity: 1; }
+  100% { opacity: 1; }
+}
+
+/* ---------------------------------------------------------------------------
+   Sonner — tokens applied to the library's DOM (never hand-roll toasts).
+--------------------------------------------------------------------------- */
+[data-sonner-toaster] {
+  --width: 360px;
+  font-family: var(--font-sans);
+}
+[data-sonner-toast] {
+  background: var(--surface-2);
+  border: 1px solid var(--hairline);
+  color: var(--fg);
+  border-radius: var(--radius-ui);
+  box-shadow: 0 12px 32px -8px oklch(0 0 0 / 55%);
+  font-size: 13px;
+}
+[data-sonner-toast] [data-title] {
+  font-size: 13px;
+  font-weight: 500;
+}
+[data-sonner-toast] [data-description] {
+  color: var(--muted);
+  font-size: 12.5px;
+}
+[data-sonner-toast][data-type="success"] [data-icon] {
+  color: var(--success);
+}
+[data-sonner-toast][data-type="error"] [data-icon] {
+  color: var(--danger);
+}
+
+/* ---------------------------------------------------------------------------
+   Reduced motion — movement is removed, color/opacity fades at 200ms stay
+   (docs §6, emil-design-eng rule 9).
+--------------------------------------------------------------------------- */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  ::before,
+  ::after {
+    animation: none !important;
+    transition-property: opacity, color, background-color, border-color, box-shadow, fill, stroke !important;
+    transition-duration: var(--duration-medium) !important;
+    transition-timing-function: linear !important;
+  }
+}

@@ -1,0 +1,169 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  PYTHON_VERSION: "3.12"
+  NODE_VERSION: "22"
+  HTTP_PORT: "8095"
+  HTTPS_PORT: "8495"
+
+jobs:
+  backend:
+    name: Backend · lint, tests, coverage
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Start Postgres with app roles
+        run: |
+          docker run -d --name ci-pg -p 5432:5432 \
+            -e POSTGRES_DB=railway \
+            -e POSTGRES_USER=postgres \
+            -e POSTGRES_PASSWORD=postgres \
+            -e RAILWAY_OWNER_PASSWORD=railway_owner_pw \
+            -e RAILWAY_APP_PASSWORD=railway_app_pw \
+            -v "$PWD/infra/postgres/init:/docker-entrypoint-initdb.d:ro" \
+            postgres:17-alpine
+          for i in $(seq 1 30); do
+            docker exec ci-pg pg_isready -U postgres -d railway && exit 0
+            sleep 1
+          done
+          echo "Postgres did not become ready" && exit 1
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: pip
+          cache-dependency-path: backend/requirements*.txt
+
+      - name: Install dependencies
+        working-directory: backend
+        run: pip install -r requirements.txt -r requirements-dev.txt
+
+      - name: Ruff
+        working-directory: backend
+        run: ruff check app tests
+
+      - name: Pytest with coverage gate
+        working-directory: backend
+        env:
+          TEST_PG_PORT: "5432"
+        run: |
+          python -m pytest -q \
+            --cov=app --cov-report=term-missing --cov-report=xml \
+            --cov-fail-under=75
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: backend-coverage
+          path: backend/coverage.xml
+          if-no-files-found: ignore
+
+  frontend:
+    name: Frontend · lint, types, unit, build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install dependencies
+        working-directory: frontend
+        run: npm ci
+
+      - name: ESLint
+        working-directory: frontend
+        run: npm run lint
+
+      - name: TypeScript
+        working-directory: frontend
+        run: npm run typecheck
+
+      - name: Vitest with coverage thresholds
+        working-directory: frontend
+        run: npm run test:coverage
+
+      - name: Production build
+        working-directory: frontend
+        run: npm run build
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: frontend-coverage
+          path: frontend/coverage
+          if-no-files-found: ignore
+
+  e2e:
+    name: E2E · Playwright (chromium + mobile) & a11y
+    runs-on: ubuntu-latest
+    needs: [backend, frontend]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Cache Playwright browsers
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ hashFiles('frontend/package-lock.json') }}
+
+      - name: Install frontend dependencies
+        working-directory: frontend
+        run: npm ci
+
+      - name: Install Playwright browsers
+        working-directory: frontend
+        run: npx playwright install --with-deps chromium
+
+      - name: Start the stack
+        run: docker compose up -d --build
+
+      - name: Wait for the stack
+        run: |
+          for i in $(seq 1 90); do
+            curl -sf "http://localhost:${HTTP_PORT:-8095}/healthz" && exit 0
+            sleep 2
+          done
+          docker compose logs --tail=200
+          exit 1
+
+      - name: Playwright
+        working-directory: frontend
+        env:
+          E2E_BASE_URL: http://demo.localhost:8095
+          E2E_VISUAL: "1"
+        run: npm run e2e
+
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-report
+          path: frontend/playwright-report
+          if-no-files-found: ignore
+
+      - name: Stack logs on failure
+        if: failure()
+        run: docker compose logs --tail=300
+
+      - name: Tear down
+        if: always()
+        run: docker compose down -v

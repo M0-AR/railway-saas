@@ -1,0 +1,30 @@
+# Env files
+.env
+.env.local
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+.pytest_cache/
+.ruff_cache/
+
+# Node
+node_modules/
+.next/
+out/
+
+# Test artifacts
+coverage.xml
+.coverage
+frontend/coverage/
+frontend/playwright-report/
+frontend/test-results/
+frontend/blob-report/
+playwright-report/
+test-results/
+docs/mutation/
+
+# Misc
+*.log
+.DS_Store

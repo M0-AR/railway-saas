@@ -1,0 +1,813 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>RailFlow — Every seat. Every train. One workspace.</title>
+<meta name="description" content="Multi-tenant railway operations: bookings that cannot double-sell, live inventory, reports, roles and an audit log. Run the demo in 60 seconds.">
+<meta name="color-scheme" content="dark">
+<meta name="theme-color" content="#0b0a0f">
+<meta property="og:type" content="website">
+<meta property="og:title" content="RailFlow — Every seat. Every train. One workspace.">
+<meta property="og:description" content="Bookings that cannot double-sell, live inventory, reports, roles and an audit log — in one multi-tenant workspace.">
+<meta property="og:image" content="assets/hero-banner.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="RailFlow — Every seat. Every train. One workspace.">
+<meta name="twitter:description" content="Multi-tenant railway operations with inventory that cannot double-sell.">
+<meta name="twitter:image" content="assets/hero-banner.png">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%236d5efc'/%3E%3Cpath d='M21 47V17h13a9.5 9.5 0 0 1 0 19h-7l11 11' fill='none' stroke='%23fff' stroke-width='6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+<style>
+@font-face{font-family:Inter;src:url(assets/fonts/inter.woff2) format("woff2");font-weight:100 900;font-style:normal;font-display:swap}
+:root{
+  --bg:#0b0a0f;--bg2:#0e0d13;--surface:#141318;--surface2:#1a1921;--surface3:#201f28;
+  --line:rgba(255,255,255,.09);--line2:rgba(255,255,255,.14);
+  --text:#efedf4;--muted:#aaa8b6;--faint:#8d8b9a;
+  --brand:#6d5efc;--brand2:#a79dff;--cyan:#22d3ee;--green:#4ade80;--amber:#fbbf24;--red:#f87171;
+  --radius:18px;--max:1180px;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--text);font-family:Inter,system-ui,-apple-system,"Segoe UI",sans-serif;line-height:1.6;-webkit-font-smoothing:antialiased;overflow-x:hidden}
+img{max-width:100%;display:block}
+a{color:inherit;text-decoration:none}
+button{font:inherit;color:inherit}
+h1,h2,h3{line-height:1.08;letter-spacing:-.035em;margin:0}
+h2{font-size:clamp(30px,4vw,46px);font-weight:700}
+h3{font-size:19px;font-weight:650;letter-spacing:-.02em}
+p{margin:0}
+ul{margin:0;padding:0;list-style:none}
+.wrap{width:min(var(--max),calc(100% - 48px));margin-inline:auto}
+.eyebrow{display:inline-flex;align-items:center;gap:8px;font-size:12px;font-weight:650;letter-spacing:.14em;text-transform:uppercase;color:var(--brand2)}
+.eyebrow::before{content:"";width:16px;height:1px;background:linear-gradient(90deg,var(--brand),var(--cyan))}
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
+[hidden]{display:none!important}
+.skip{position:fixed;top:-100px;left:16px;z-index:100;background:var(--brand);color:#fff;padding:10px 16px;border-radius:10px;font-weight:600}
+.skip:focus{top:16px}
+:focus-visible{outline:2px solid var(--cyan);outline-offset:3px;border-radius:6px}
+
+.nav{position:sticky;top:0;z-index:50;background:#0b0a0f;border-bottom:1px solid rgba(255,255,255,.06)}
+.nav-inner{display:flex;align-items:center;gap:26px;height:66px}
+.brand{display:flex;align-items:center;gap:10px;font-weight:700;font-size:17px;letter-spacing:-.02em;margin-right:auto}
+.logo{width:30px;height:30px;border-radius:9px;display:grid;place-items:center;background:linear-gradient(135deg,#7c6cff,#5b4bf0);color:#fff;font-size:15px;font-weight:800;box-shadow:0 0 0 1px rgba(255,255,255,.14) inset,0 6px 18px rgba(109,94,252,.35)}
+.nav nav{display:flex;gap:24px;font-size:14px;color:var(--muted)}
+.nav nav a{transition:color .18s}
+.nav nav a:hover{color:var(--text)}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:9px;padding:12px 20px;border-radius:11px;border:1px solid transparent;font-size:14.5px;font-weight:640;cursor:pointer;transition:transform .18s,background .18s,border-color .18s,box-shadow .18s;white-space:nowrap}
+.btn:hover{transform:translateY(-1px)}
+.btn-primary{background:linear-gradient(135deg,#7c6cff,#5b4bf0);color:#fff;box-shadow:0 10px 30px rgba(109,94,252,.32),0 0 0 1px rgba(255,255,255,.12) inset}
+.btn-primary:hover{box-shadow:0 14px 36px rgba(109,94,252,.44),0 0 0 1px rgba(255,255,255,.16) inset}
+.btn-ghost{border-color:var(--line2);background:rgba(255,255,255,.03);color:var(--text)}
+.btn-ghost:hover{background:rgba(255,255,255,.07);border-color:rgba(255,255,255,.24)}
+.btn-sm{padding:9px 15px;font-size:13.5px;border-radius:9px}
+
+.hero{position:relative;padding:84px 0 72px;overflow:hidden}
+.hero::before{content:"";position:absolute;inset:-30% -20% auto;height:760px;background:radial-gradient(46% 50% at 22% 38%,rgba(109,94,252,.27),transparent 70%),radial-gradient(38% 42% at 76% 30%,rgba(34,211,238,.13),transparent 70%);pointer-events:none}
+.hero::after{content:"";position:absolute;inset:0;background-image:linear-gradient(rgba(255,255,255,.045) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.045) 1px,transparent 1px);background-size:64px 64px;mask-image:radial-gradient(58% 58% at 50% 28%,#000 0%,transparent 100%);pointer-events:none;opacity:.5}
+.hero-grid{position:relative;z-index:1;display:grid;grid-template-columns:1.02fr .98fr;gap:56px;align-items:center}
+.hero h1{font-size:clamp(42px,5.4vw,68px);font-weight:720;margin:16px 0 0}
+.grad{background:linear-gradient(100deg,#b7aeff 0%,#7c6cff 44%,#22d3ee 100%);-webkit-background-clip:text;background-clip:text;color:transparent}
+.lede{margin-top:22px;font-size:17px;color:var(--muted);max-width:54ch}
+.lede strong{color:var(--text);font-weight:600}
+.cta-row{display:flex;flex-wrap:wrap;gap:12px;margin-top:30px}
+.proof{display:flex;flex-wrap:wrap;gap:8px;margin-top:30px}
+.proof li{font-size:12px;color:var(--muted);border:1px solid var(--line);background:rgba(255,255,255,.03);padding:6px 11px;border-radius:999px}
+.proof b{color:var(--text);font-weight:650}
+.hero-visual{position:relative}
+.browser{position:relative;border:1px solid var(--line2);border-radius:16px;overflow:hidden;background:#0d0c12;box-shadow:0 40px 90px rgba(0,0,0,.6),0 0 0 1px rgba(255,255,255,.04) inset;transform:perspective(1400px) rotateY(-3deg) rotateX(1deg)}
+.browser-bar{display:flex;align-items:center;gap:12px;height:42px;padding:0 14px;background:#131218;border-bottom:1px solid var(--line)}
+.dots{display:flex;gap:6px}
+.dots i{width:9px;height:9px;border-radius:50%;background:#2c2a36;display:block}
+.dots i:first-child{background:#3a3344}
+.browser-url{flex:1;text-align:center;font-size:11.5px;color:var(--faint);background:#0d0c12;border:1px solid var(--line);border-radius:6px;padding:4px 10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.browser-live{display:flex;align-items:center;gap:6px;font-size:10.5px;font-weight:600;color:var(--green);letter-spacing:.02em}
+.browser-live i{width:6px;height:6px;border-radius:50%;background:var(--green);box-shadow:0 0 10px var(--green)}
+.hero-gif{width:100%;height:auto;background:#0d0c12}
+.hero-caption{margin-top:14px;font-size:12.5px;color:var(--faint);text-align:right}
+
+.stats{border-block:1px solid var(--line);background:linear-gradient(180deg,rgba(255,255,255,.018),transparent)}
+.stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:0}
+.stat{padding:30px 26px;border-left:1px solid var(--line)}
+.stat:first-child{border-left:0;padding-left:0}
+.stat b{display:block;font-size:clamp(26px,3vw,36px);font-weight:720;letter-spacing:-.04em;background:linear-gradient(180deg,#fff,#a9a3c9);-webkit-background-clip:text;background-clip:text;color:transparent}
+.stat span{display:block;margin-top:4px;font-size:12.5px;color:var(--faint)}
+.stat em{font-style:normal;color:var(--green);font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;display:block;margin-top:8px}
+
+.section{padding:96px 0 0}
+.section-head{max-width:720px}
+.section-head h2{margin:14px 0 0}
+.section-head p{margin-top:16px;color:var(--muted);font-size:15.5px;max-width:62ch}
+.grid{display:grid;gap:16px}
+.cards{grid-template-columns:repeat(4,1fr);margin-top:40px}
+.card{background:linear-gradient(180deg,rgba(255,255,255,.035),rgba(255,255,255,.012));border:1px solid var(--line);border-radius:var(--radius);padding:24px;transition:transform .22s,border-color .22s,background .22s}
+.card:hover{transform:translateY(-3px);border-color:rgba(255,255,255,.17);background:linear-gradient(180deg,rgba(255,255,255,.055),rgba(255,255,255,.018))}
+.card p{margin-top:10px;font-size:13.5px;color:var(--muted);line-height:1.55}
+.icon{width:36px;height:36px;border-radius:10px;display:grid;place-items:center;background:rgba(109,94,252,.13);border:1px solid rgba(109,94,252,.28);color:#bcb5ff;margin-bottom:16px}
+.icon svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.card:nth-child(3n+2) .icon{background:rgba(34,211,238,.1);border-color:rgba(34,211,238,.25);color:#8ce9f7}
+.card:nth-child(3n+3) .icon{background:rgba(74,222,128,.09);border-color:rgba(74,222,128,.24);color:#9af0ba}
+.tag{display:inline-block;margin-top:16px;font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--faint);font-weight:600}
+.audience{margin-top:28px;display:flex;flex-wrap:wrap;align-items:center;gap:10px;padding:18px 20px;border:1px dashed var(--line2);border-radius:14px;background:rgba(255,255,255,.02)}
+.audience span:first-child{font-size:12px;font-weight:650;letter-spacing:.1em;text-transform:uppercase;color:var(--faint);margin-right:6px}
+.audience b{font-size:12.5px;font-weight:600;color:var(--muted);border:1px solid var(--line);border-radius:999px;padding:5px 11px}
+
+.shots{display:grid;grid-template-columns:repeat(2,1fr);gap:18px;margin-top:40px}
+.shot{display:block;text-align:left;padding:0;background:var(--surface);border:1px solid var(--line);border-radius:16px;overflow:hidden;cursor:zoom-in;transition:transform .22s,border-color .22s,box-shadow .22s}
+.shot:hover{transform:translateY(-3px);border-color:var(--line2);box-shadow:0 24px 50px rgba(0,0,0,.4)}
+.shot-frame{display:block;aspect-ratio:16/10;overflow:hidden;background:#0d0c12;border-bottom:1px solid var(--line)}
+.shot-frame img{width:100%;height:100%;object-fit:cover;object-position:top center;transition:transform .4s}
+.shot:hover .shot-frame img{transform:scale(1.015)}
+.shot-meta{display:flex;align-items:baseline;justify-content:space-between;gap:14px;padding:14px 18px}
+.shot-meta strong{font-size:14px;font-weight:640}
+.shot-meta span{font-size:12px;color:var(--faint);text-align:right}
+.phones{display:flex;align-items:flex-start;justify-content:center;gap:28px;margin-top:40px;padding:38px 20px;border:1px solid var(--line);border-radius:20px;background:radial-gradient(60% 100% at 50% 0%,rgba(109,94,252,.1),transparent),var(--surface)}
+.phone{margin:0;text-align:center}
+.phone img{width:220px;height:auto;border-radius:22px;border:1px solid var(--line2);box-shadow:0 24px 60px rgba(0,0,0,.55)}
+.phone figcaption{margin-top:14px;font-size:12px;color:var(--faint)}
+
+.plans{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;margin-top:40px;align-items:stretch}
+.plan{position:relative;display:flex;flex-direction:column;background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:28px}
+.plan.featured{border-color:rgba(124,108,255,.55);background:linear-gradient(180deg,rgba(109,94,252,.12),rgba(109,94,252,.03) 60%),var(--surface);box-shadow:0 30px 70px rgba(109,94,252,.18)}
+.plan .badge{position:absolute;top:-11px;left:24px;font-size:10.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;background:linear-gradient(135deg,#7c6cff,#5b4bf0);color:#fff;padding:4px 10px;border-radius:999px}
+.plan h3{font-size:17px;color:var(--brand2);letter-spacing:.02em}
+.plan .price{display:flex;align-items:baseline;gap:6px;margin-top:14px}
+.plan .price b{font-size:44px;font-weight:720;letter-spacing:-.045em}
+.plan .price span{font-size:13px;color:var(--faint)}
+.plan .blurb{margin-top:8px;font-size:13px;color:var(--muted);min-height:40px}
+.plan ul{margin:22px 0 26px;display:grid;gap:10px;font-size:13.5px;color:var(--muted)}
+.plan li{display:flex;gap:9px;align-items:flex-start}
+.plan li::before{content:"";flex:none;width:16px;height:16px;margin-top:2px;border-radius:50%;background:rgba(74,222,128,.12);border:1px solid rgba(74,222,128,.3);background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M4.5 8.4l2.3 2.3 4.8-5' fill='none' stroke='%234ade80' stroke-width='1.7' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");background-size:16px}
+.plan .btn{margin-top:auto;width:100%}
+.plan-note{margin-top:18px;font-size:12.5px;color:var(--faint);text-align:center}
+
+.learn-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:16px;margin-top:40px}
+.concept{padding:26px;border:1px solid var(--line);border-radius:var(--radius);background:var(--surface)}
+.concept .num{font-size:11px;font-weight:700;letter-spacing:.14em;color:var(--brand2)}
+.concept h3{margin-top:10px}
+.concept p{margin-top:10px;font-size:14px;color:var(--muted)}
+.glossary{margin-top:28px;display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--line);border:1px solid var(--line);border-radius:14px;overflow:hidden}
+.glossary div{background:var(--bg2);padding:16px 18px}
+.glossary dt{font-size:12px;font-weight:650;color:var(--text);letter-spacing:.02em}
+.glossary dd{margin:4px 0 0;font-size:12px;color:var(--faint);line-height:1.5}
+.learn-cta{margin-top:28px;display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:16px;padding:22px 26px;border:1px solid rgba(109,94,252,.32);border-radius:16px;background:linear-gradient(90deg,rgba(109,94,252,.12),rgba(34,211,238,.05))}
+.learn-cta p{font-size:14px;color:var(--muted)}
+.learn-cta strong{color:var(--text)}
+
+.quiz-shell{margin-top:40px;border:1px solid var(--line2);border-radius:24px;background:radial-gradient(80% 130% at 50% -20%,rgba(109,94,252,.18),transparent 60%),var(--surface);padding:34px;max-width:820px;margin-inline:auto;box-shadow:0 40px 90px rgba(0,0,0,.35)}
+.quiz-top{display:flex;align-items:center;justify-content:space-between;gap:12px;font-size:12px;color:var(--faint);font-weight:600;letter-spacing:.04em}
+.quiz-score{color:var(--brand2)}
+.quiz-bar{height:5px;border-radius:999px;background:rgba(255,255,255,.08);margin-top:12px;overflow:hidden}
+.quiz-bar span{display:block;height:100%;width:0;border-radius:999px;background:linear-gradient(90deg,var(--brand),var(--cyan));transition:width .35s ease}
+.quiz-q{font-size:clamp(20px,2.6vw,25px);font-weight:650;margin-top:26px;letter-spacing:-.025em;line-height:1.3}
+.quiz-options{display:grid;gap:10px;margin-top:22px}
+.opt{display:flex;align-items:center;gap:13px;text-align:left;padding:14px 16px;border-radius:12px;border:1px solid var(--line2);background:rgba(255,255,255,.025);cursor:pointer;font-size:14.5px;transition:background .16s,border-color .16s,transform .16s}
+.opt:hover:not(:disabled){background:rgba(255,255,255,.06);border-color:rgba(255,255,255,.26);transform:translateX(2px)}
+.opt:disabled{cursor:default;opacity:.75}
+.opt-key{flex:none;width:26px;height:26px;border-radius:7px;display:grid;place-items:center;font-size:11.5px;font-weight:700;background:rgba(255,255,255,.06);border:1px solid var(--line);color:var(--muted)}
+.opt.correct{border-color:rgba(74,222,128,.55);background:rgba(74,222,128,.1);opacity:1}
+.opt.correct .opt-key{background:rgba(74,222,128,.18);border-color:rgba(74,222,128,.4);color:var(--green)}
+.opt.wrong{border-color:rgba(248,113,113,.5);background:rgba(248,113,113,.08);opacity:1}
+.opt.wrong .opt-key{background:rgba(248,113,113,.16);border-color:rgba(248,113,113,.38);color:var(--red)}
+.quiz-feedback{margin-top:18px;padding:14px 16px;border-radius:12px;background:rgba(255,255,255,.035);border:1px solid var(--line);font-size:13.5px;color:var(--muted);display:none}
+.quiz-feedback.show{display:block}
+.quiz-feedback strong{color:var(--text)}
+.quiz-feedback.ok{border-color:rgba(74,222,128,.28);background:rgba(74,222,128,.06)}
+.quiz-feedback.no{border-color:rgba(248,113,113,.26);background:rgba(248,113,113,.05)}
+.quiz-actions{display:flex;justify-content:flex-end;margin-top:20px}
+.quiz-result{text-align:center;padding:14px 0 4px}
+.quiz-result .ring{width:112px;height:112px;margin:0 auto 22px;border-radius:50%;display:grid;place-items:center;background:conic-gradient(var(--brand) calc(var(--pct,0) * 1%),rgba(255,255,255,.08) 0);position:relative}
+.quiz-result .ring::after{content:"";position:absolute;inset:7px;border-radius:50%;background:var(--surface)}
+.quiz-result .ring b{position:relative;z-index:1;font-size:26px;letter-spacing:-.03em}
+.quiz-result h3{font-size:26px}
+.quiz-result p{margin-top:10px;color:var(--muted);font-size:14px;max-width:44ch;margin-inline:auto}
+.quiz-result .btn{margin-top:22px}
+.quiz-eyebrow{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--brand2);font-weight:700}
+
+.start-card{margin-top:40px;display:grid;grid-template-columns:1.05fr .95fr;gap:0;border:1px solid var(--line2);border-radius:22px;overflow:hidden;background:var(--surface)}
+.start-left{padding:36px;border-right:1px solid var(--line)}
+.start-left h3{font-size:22px}
+.start-left>p{margin-top:10px;font-size:14px;color:var(--muted)}
+.cmd{margin:22px 0 12px;background:#0a0910;border:1px solid var(--line);border-radius:12px;padding:18px;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:12.5px;line-height:1.9;color:#cfcbdd;overflow-x:auto}
+.cmd .prompt{color:var(--brand2);user-select:none}
+.copy-row{display:flex;align-items:center;gap:14px}
+.copy-row .hint{font-size:11.5px;color:var(--faint)}
+.start-right{padding:36px}
+.start-right h3{font-size:16px}
+.creds{width:100%;border-collapse:collapse;margin-top:16px;font-size:12px}
+.creds th{text-align:left;font-weight:600;color:var(--faint);font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;padding:0 8px 8px 0;border-bottom:1px solid var(--line)}
+.creds td{padding:11px 8px 11px 0;border-bottom:1px solid rgba(255,255,255,.05);color:var(--muted);vertical-align:top}
+.creds td:first-child{color:var(--text);font-weight:600}
+.creds code{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:11px;background:rgba(255,255,255,.055);padding:2px 6px;border-radius:5px;color:#d8d4ea}
+.start-note{margin-top:16px;font-size:11.5px;color:var(--faint);line-height:1.6}
+
+.footer{margin-top:96px;border-top:1px solid var(--line);background:var(--bg2)}
+.footer-inner{display:flex;flex-wrap:wrap;align-items:flex-start;justify-content:space-between;gap:28px;padding:44px 0}
+.footer-brand p{margin-top:10px;font-size:12.5px;color:var(--faint);max-width:34ch}
+.footer nav{display:flex;flex-wrap:wrap;gap:22px;font-size:13px;color:var(--muted)}
+.footer nav a:hover{color:var(--text)}
+.footer-bottom{border-top:1px solid rgba(255,255,255,.06);padding:18px 0 26px;display:flex;flex-wrap:wrap;gap:10px;justify-content:space-between;font-size:11.5px;color:var(--faint)}
+
+.lightbox{width:min(1100px,94vw);max-height:92vh;padding:0;border:1px solid var(--line2);border-radius:16px;background:#0d0c12;color:var(--text);overflow:hidden}
+.lightbox::backdrop{background:rgba(5,4,8,.84);backdrop-filter:blur(6px)}
+.lightbox figure{margin:0;display:flex;flex-direction:column;max-height:92vh}
+.lightbox img{width:100%;height:auto;max-height:calc(92vh - 62px);object-fit:contain;background:#0a0910}
+.lightbox figcaption{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:12px 16px;border-top:1px solid var(--line);font-size:13px;color:var(--muted)}
+.lightbox button{background:rgba(255,255,255,.06);border:1px solid var(--line2);border-radius:8px;padding:7px 13px;font-size:12.5px;cursor:pointer}
+.lightbox button:hover{background:rgba(255,255,255,.12)}
+
+.reveal{opacity:0;transform:translateY(14px);transition:opacity .6s ease,transform .6s ease}
+.reveal.in{opacity:1;transform:none}
+
+@media (max-width:1080px){
+  .cards{grid-template-columns:repeat(2,1fr)}
+  .glossary{grid-template-columns:repeat(2,1fr)}
+}
+@media (max-width:960px){
+  .hero{padding-top:60px}
+  .hero-grid{grid-template-columns:1fr;gap:44px}
+  .hero-copy{max-width:660px}
+  .hero-visual{max-width:680px}
+  .browser{transform:none}
+  .start-card{grid-template-columns:1fr}
+  .start-left{border-right:0;border-bottom:1px solid var(--line)}
+}
+@media (max-width:820px){
+  .nav nav{display:none}
+  .stats-grid{grid-template-columns:repeat(2,1fr)}
+  .stat:nth-child(3){border-left:0;padding-left:0;border-top:1px solid var(--line)}
+  .stat:nth-child(4){border-top:1px solid var(--line)}
+  .plans{grid-template-columns:1fr}
+  .learn-grid{grid-template-columns:1fr}
+  .shots{grid-template-columns:1fr}
+}
+@media (max-width:620px){
+  .wrap{width:min(var(--max),calc(100% - 32px))}
+  .section{padding-top:72px}
+  .hero{padding:44px 0 56px}
+  .hero h1{font-size:clamp(38px,11vw,52px)}
+  .cta-row .btn{flex:1}
+  .stats-grid{grid-template-columns:1fr}
+  .stat{border-left:0;padding-left:0;border-top:1px solid var(--line)}
+  .stat:first-child{border-top:0}
+  .cards{grid-template-columns:1fr}
+  .glossary{grid-template-columns:1fr}
+  .phones{gap:16px;padding:24px 12px}
+  .phone img{width:min(42vw,170px);border-radius:16px}
+  .quiz-shell{padding:24px 20px}
+  .start-left,.start-right{padding:24px 20px}
+  .shot-meta span{display:none}
+  .footer-inner{padding:34px 0}
+  .browser-url{display:none}
+  .hero-caption{text-align:left}
+}
+@media (prefers-reduced-motion:reduce){
+  html{scroll-behavior:auto}
+  *,*::before,*::after{transition:none!important;animation:none!important}
+  .reveal{opacity:1;transform:none}
+}
+</style>
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+
+<header class="nav">
+  <div class="wrap nav-inner">
+    <a class="brand" href="#top"><span class="logo" aria-hidden="true">R</span>RailFlow</a>
+    <nav aria-label="Primary">
+      <a href="#features">Features</a>
+      <a href="#screens">Screens</a>
+      <a href="#plans">Plans</a>
+      <a href="#learn">Learn</a>
+      <a href="#quiz">Quiz</a>
+    </nav>
+    <a class="btn btn-primary btn-sm" href="#start">Get started</a>
+  </div>
+</header>
+
+<main id="main">
+  <section class="hero" id="top">
+    <div class="wrap hero-grid">
+      <div class="hero-copy">
+        <p class="eyebrow">Multi-tenant railway operations</p>
+        <h1>Every seat.<br>Every train.<br><span class="grad">One workspace.</span></h1>
+        <p class="lede">Sell, change and cancel tickets without ever double-booking a seat. RailFlow runs inventory, schedules, reports, roles and your audit trail in <strong>one private workspace per company</strong>.</p>
+        <div class="cta-row">
+          <a class="btn btn-primary" href="#start">Run the demo in 60 seconds</a>
+          <a class="btn btn-ghost" href="#screens">See the product</a>
+        </div>
+        <ul class="proof" aria-label="Verification">
+          <li><b>107</b> backend tests</li>
+          <li><b>60</b> frontend tests</li>
+          <li><b>30</b> end-to-end checks</li>
+          <li><b>81%</b> backend coverage</li>
+        </ul>
+      </div>
+      <div class="hero-visual reveal">
+        <div class="browser">
+          <div class="browser-bar">
+            <span class="dots" aria-hidden="true"><i></i><i></i><i></i></span>
+            <span class="browser-url">demo.railflow.app/dashboard</span>
+            <span class="browser-live"><i aria-hidden="true"></i>Live demo</span>
+          </div>
+          <img class="hero-gif" src="assets/gifs/tour.gif" width="1080" height="608" alt="Fifteen-second product tour: signing in to the demo workspace, viewing the dashboard, opening a booking, browsing trains and reports." decoding="async">
+        </div>
+        <p class="hero-caption">A 15-second tour, recorded in the seeded demo workspace.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="stats" aria-label="Engineering quality">
+    <div class="wrap stats-grid">
+      <div class="stat"><b>81%</b><span>backend test coverage</span><em>Measured</em></div>
+      <div class="stat"><b>107</b><span>backend tests passing</span><em>Every route</em></div>
+      <div class="stat"><b>60</b><span>frontend tests passing</span><em>100% lines</em></div>
+      <div class="stat"><b>30</b><span>end-to-end checks</span><em>Desktop + mobile</em></div>
+    </div>
+  </section>
+
+  <section class="wrap section" id="features">
+    <div class="section-head">
+      <p class="eyebrow">Features</p>
+      <h2>Everything the desk, the depot and the boardroom need.</h2>
+      <p>One system replaces the seat spreadsheet, the booking notebook and the monthly scramble for numbers. Every feature below ships in the product you can run locally.</p>
+    </div>
+    <div class="grid cards">
+      <article class="card reveal">
+        <div class="icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M3 9a3 3 0 0 0 0 6v3a1 1 0 0 0 1 1h16a1 1 0 0 0 1-1v-3a3 3 0 0 1 0-6V6a1 1 0 0 0-1-1H4a1 1 0 0 0-1 1z"/><path d="M14 5v14"/></svg></div>
+        <h3>Bookings that cannot double-sell</h3>
+        <p>Seat inventory is locked per train and date during checkout. Two agents, one last seat: exactly one booking succeeds, the other gets a clear answer.</p>
+        <span class="tag">Counter agents · Ops</span>
+      </article>
+      <article class="card reveal">
+        <div class="icon" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="5" y="3" width="14" height="14" rx="4"/><path d="M8 21l1.5-4M16 21l-1.5-4M5 10h14M9 7h.01M13 7h.01"/></svg></div>
+        <h3>Fleet, routes and schedules</h3>
+        <p>Trains, running days, fares and seat layouts in one place. Search any route and date, then see exactly what is left to sell.</p>
+        <span class="tag">Operations</span>
+      </article>
+      <article class="card reveal">
+        <div class="icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg></div>
+        <h3>Dashboard and reports</h3>
+        <p>Revenue, occupancy, cancellations and top routes, refreshed from live data. Filter by period and export the report as CSV.</p>
+        <span class="tag">Owners · Finance</span>
+      </article>
+      <article class="card reveal">
+        <div class="icon" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.2"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0"/><circle cx="17" cy="9" r="2.6"/><path d="M16 15.5a5.5 5.5 0 0 1 5.5 4.5"/></svg></div>
+        <h3>Team and permissions</h3>
+        <p>Owner, Manager, Agent and Viewer. Invite by email, change a role, deactivate access — no shared logins, no guesswork.</p>
+        <span class="tag">Owners · IT</span>
+      </article>
+      <article class="card reveal">
+        <div class="icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 3l8 3v6c0 4.6-3.2 7.8-8 9-4.8-1.2-8-4.4-8-9V6z"/><path d="M8.5 12l2.4 2.4 4.6-5"/></svg></div>
+        <h3>Audit log</h3>
+        <p>Every booking, invite and settings change with actor, action, entity, IP and payload. Filter by date and answer “who did that?” in seconds.</p>
+        <span class="tag">Compliance · Owners</span>
+      </article>
+      <article class="card reveal">
+        <div class="icon" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="4" y="10" width="16" height="10" rx="2.5"/><path d="M8 10V7a4 4 0 0 1 8 0v3M12 14v2"/></svg></div>
+        <h3>Multi-tenant by design</h3>
+        <p>PostgreSQL row-level security isolates every workspace. A token from one company cannot read another company's trains, people or money.</p>
+        <span class="tag">IT · Security</span>
+      </article>
+      <article class="card reveal">
+        <div class="icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 3a9 9 0 1 0 0 18c1.4 0 2-.9 2-1.8 0-1.3-1.1-1.7-1.1-2.9 0-.9.7-1.5 1.7-1.5H16a5 5 0 0 0 5-5C21 6 17 3 12 3z"/><circle cx="7.5" cy="10" r="1"/><circle cx="10.5" cy="6.8" r="1"/><circle cx="15" cy="7.2" r="1"/></svg></div>
+        <h3>Branding and custom domain</h3>
+        <p>Your logo text, support email, primary and accent colours. Growth and Enterprise workspaces can serve the app on their own domain.</p>
+        <span class="tag">Marketing</span>
+      </article>
+      <article class="card reveal">
+        <div class="icon" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="2.5" y="5" width="19" height="14" rx="2.5"/><path d="M2.5 10h19M6 15h4"/></svg></div>
+        <h3>Plans, quotas and billing</h3>
+        <p>Live usage against train, seat and booking limits. Upgrade requests arrive pre-filled with the workspace and plan, ready for your team to approve.</p>
+        <span class="tag">Finance</span>
+      </article>
+    </div>
+    <div class="audience reveal">
+      <span>Built for</span>
+      <b>Owners</b><b>Counter agents</b><b>Ops and dispatch</b><b>Finance</b><b>IT and security</b>
+    </div>
+  </section>
+
+  <section class="wrap section" id="screens">
+    <div class="section-head">
+      <p class="eyebrow">Product tour</p>
+      <h2>Look inside a real workspace.</h2>
+      <p>Screens from the seeded “Demo Rail Co” workspace: 12 trains, 48 bookings and a full team. Select any screen to enlarge it.</p>
+    </div>
+    <div class="shots">
+      <button class="shot reveal" type="button" data-shot="assets/screenshots/dashboard.png" data-title="Dashboard">
+        <span class="shot-frame"><img src="assets/screenshots/dashboard.png" alt="Dashboard with revenue, bookings, occupancy and recent activity" width="1440" height="900" loading="lazy"></span>
+        <span class="shot-meta"><strong>Dashboard</strong><span>The business at a glance</span></span>
+      </button>
+      <button class="shot reveal" type="button" data-shot="assets/screenshots/bookings.png" data-title="Bookings">
+        <span class="shot-frame"><img src="assets/screenshots/bookings.png" alt="Bookings list with search, date filters, PNRs and status" width="1440" height="900" loading="lazy"></span>
+        <span class="shot-meta"><strong>Bookings</strong><span>Search, open, change, cancel</span></span>
+      </button>
+      <button class="shot reveal" type="button" data-shot="assets/screenshots/trains.png" data-title="Fleet and schedules">
+        <span class="shot-frame"><img src="assets/screenshots/trains.png" alt="Train list with routes, running days, fares and seat counts" width="1440" height="900" loading="lazy"></span>
+        <span class="shot-meta"><strong>Fleet and schedules</strong><span>Routes, days, fares, seats</span></span>
+      </button>
+      <button class="shot reveal" type="button" data-shot="assets/screenshots/reports.png" data-title="Reports">
+        <span class="shot-frame"><img src="assets/screenshots/reports.png" alt="Reports with revenue, occupancy, cancellations and route breakdown" width="1440" height="900" loading="lazy"></span>
+        <span class="shot-meta"><strong>Reports</strong><span>Revenue, occupancy, CSV</span></span>
+      </button>
+      <button class="shot reveal" type="button" data-shot="assets/screenshots/team.png" data-title="Team and roles">
+        <span class="shot-frame"><img src="assets/screenshots/team.png" alt="Team page with seats used, members, roles and invite form" width="1440" height="900" loading="lazy"></span>
+        <span class="shot-meta"><strong>Team and roles</strong><span>Owner to Viewer, in control</span></span>
+      </button>
+      <button class="shot reveal" type="button" data-shot="assets/screenshots/audit.png" data-title="Audit log">
+        <span class="shot-frame"><img src="assets/screenshots/audit.png" alt="Audit log with actor, action, entity and IP filters" width="1440" height="900" loading="lazy"></span>
+        <span class="shot-meta"><strong>Audit log</strong><span>Who did what, from where</span></span>
+      </button>
+      <button class="shot reveal" type="button" data-shot="assets/screenshots/billing.png" data-title="Billing and usage">
+        <span class="shot-frame"><img src="assets/screenshots/billing.png" alt="Billing page with plan, usage against quotas and upgrade option" width="1440" height="900" loading="lazy"></span>
+        <span class="shot-meta"><strong>Billing and usage</strong><span>Quotas without surprises</span></span>
+      </button>
+      <button class="shot reveal" type="button" data-shot="assets/screenshots/settings.png" data-title="Settings and branding">
+        <span class="shot-frame"><img src="assets/screenshots/settings.png" alt="Settings with branding colours, support email, workspace name and domain" width="1440" height="900" loading="lazy"></span>
+        <span class="shot-meta"><strong>Settings and branding</strong><span>Make it feel like yours</span></span>
+      </button>
+    </div>
+    <div class="phones">
+      <figure class="phone reveal">
+        <img src="assets/screenshots/mobile-dashboard.png" alt="RailFlow dashboard on a phone" width="390" height="844" loading="lazy">
+        <figcaption>Dashboard on mobile</figcaption>
+      </figure>
+      <figure class="phone reveal">
+        <img src="assets/screenshots/mobile-bookings.png" alt="RailFlow bookings list on a phone" width="390" height="844" loading="lazy">
+        <figcaption>Bookings on mobile</figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <section class="wrap section" id="plans">
+    <div class="section-head">
+      <p class="eyebrow">Plans</p>
+      <h2>Start free. Grow when the network does.</h2>
+      <p>Quotas are enforced live, so there is no invoice surprise. The demo runs on Growth; switch plans from inside Billing.</p>
+    </div>
+    <div class="plans">
+      <article class="plan reveal">
+        <h3>Starter</h3>
+        <div class="price"><b>$0</b><span>forever</span></div>
+        <p class="blurb">For one station finding its feet.</p>
+        <ul>
+          <li>10 trains</li>
+          <li>3 team members</li>
+          <li>500 bookings per month</li>
+          <li>Basic reports</li>
+          <li>Email support</li>
+        </ul>
+        <a class="btn btn-ghost" href="#start">Start with Starter</a>
+      </article>
+      <article class="plan featured reveal">
+        <span class="badge">Most popular</span>
+        <h3>Growth</h3>
+        <div class="price"><b>$49</b><span>per month</span></div>
+        <p class="blurb">For teams running a real network.</p>
+        <ul>
+          <li>100 trains</li>
+          <li>15 team members</li>
+          <li>10,000 bookings per month</li>
+          <li>Advanced reports and CSV export</li>
+          <li>Audit log, roles and custom domain</li>
+        </ul>
+        <a class="btn btn-primary" href="#start">Try Growth in the demo</a>
+      </article>
+      <article class="plan reveal">
+        <h3>Enterprise</h3>
+        <div class="price"><b>$249</b><span>per month</span></div>
+        <p class="blurb">For operators with scale and auditors.</p>
+        <ul>
+          <li>Unlimited trains</li>
+          <li>Unlimited team members</li>
+          <li>Unlimited bookings</li>
+          <li>Everything in Growth</li>
+          <li>Priority support and onboarding</li>
+        </ul>
+        <a class="btn btn-ghost" href="#start">Discuss Enterprise</a>
+      </article>
+    </div>
+    <p class="plan-note">Prices shown in the product. Plan changes begin as a pre-filled request to your support desk.</p>
+  </section>
+
+  <section class="wrap section" id="learn">
+    <div class="section-head">
+      <p class="eyebrow">Beginner guide</p>
+      <h2>Never sold a ticket? You are four ideas away.</h2>
+      <p>Railway software sounds specialised. The model underneath is simple, and everything in RailFlow is built from these four ideas.</p>
+    </div>
+    <div class="learn-grid">
+      <article class="concept reveal">
+        <span class="num">01</span>
+        <h3>A workspace is one company's private office</h3>
+        <p>Every company gets its own users, trains, bookings, branding and plan. Nothing is shared. When you sign in with a workspace slug, you are choosing which office door to open.</p>
+      </article>
+      <article class="concept reveal">
+        <span class="num">02</span>
+        <h3>A train is not a departure</h3>
+        <p>The train is the vehicle — name, route, seat layout. The schedule decides which days it runs. Inventory is counted per train and per date, so Tuesday can be sold out while Wednesday is empty.</p>
+      </article>
+      <article class="concept reveal">
+        <span class="num">03</span>
+        <h3>A booking is one reservation, one PNR</h3>
+        <p>The PNR is the short code a passenger quotes at the desk. A booking carries the journey, the passengers, the seats and the money — and it can be confirmed, changed or cancelled.</p>
+      </article>
+      <article class="concept reveal">
+        <span class="num">04</span>
+        <h3>Inventory is the source of truth</h3>
+        <p>Available seats are not typed in by hand. They are derived from capacity minus live bookings. Checkout locks the inventory row, which is why the last seat can only be sold once.</p>
+      </article>
+    </div>
+    <dl class="glossary reveal">
+      <div><dt>PNR</dt><dd>Passenger Name Record — the booking's short reference.</dd></div>
+      <div><dt>Manifest</dt><dd>The passenger list for one departure.</dd></div>
+      <div><dt>Occupancy</dt><dd>Seats sold divided by seats available.</dd></div>
+      <div><dt>Tenant</dt><dd>Another word for a workspace in a shared system.</dd></div>
+      <div><dt>Quota</dt><dd>The plan limit on trains, people or monthly bookings.</dd></div>
+      <div><dt>RBAC</dt><dd>Role-based access control: what each role may do.</dd></div>
+      <div><dt>CSV export</dt><dd>A spreadsheet download of a report.</dd></div>
+      <div><dt>Audit log</dt><dd>The permanent record of who changed what.</dd></div>
+    </dl>
+    <div class="learn-cta reveal">
+      <p><strong>Ready to prove it?</strong> Eight questions, instant feedback, no sign-up.</p>
+      <a class="btn btn-primary" href="#quiz">Take the zero-to-hero quiz</a>
+    </div>
+  </section>
+
+  <section class="wrap section" id="quiz">
+    <div class="section-head">
+      <p class="eyebrow">Zero to hero</p>
+      <h2>Eight questions from “what is a PNR?” to “I could run this desk.”</h2>
+      <p>Everything is answered in the product above. Choose an answer to get an explanation, then move on.</p>
+    </div>
+    <div class="quiz-shell">
+      <div class="quiz" data-quiz></div>
+      <noscript><p style="color:var(--muted);font-size:14px">The quiz needs JavaScript. The four concepts and glossary above cover the same ground.</p></noscript>
+    </div>
+  </section>
+
+  <section class="wrap section" id="start">
+    <div class="section-head">
+      <p class="eyebrow">Quick start</p>
+      <h2>Run the whole thing in 60 seconds.</h2>
+      <p>Docker is the only prerequisite. The stack starts PostgreSQL, the API and the web app, then seeds three workspaces with data you can explore.</p>
+    </div>
+    <div class="start-card">
+      <div class="start-left">
+        <h3>Three commands, one demo</h3>
+        <p>From the repository root:</p>
+        <pre class="cmd" id="cmd"><span class="prompt">$</span> cp .env.example .env
+<span class="prompt">$</span> make up
+<span class="prompt">$</span> open http://localhost:8080</pre>
+        <div class="copy-row">
+          <button class="btn btn-ghost btn-sm" type="button" data-copy>Copy commands</button>
+          <span class="hint">First build takes a few minutes. Later starts are seconds.</span>
+          <span class="sr-only" role="status" data-copy-status></span>
+        </div>
+        <p class="start-note">HTTPS is available on <code style="font-size:11px">https://localhost:8443</code>. To stop everything: <code style="font-size:11px">make down</code>. To reset the data: <code style="font-size:11px">make down</code> then <code style="font-size:11px">make up</code>.</p>
+      </div>
+      <div class="start-right">
+        <h3>Demo sign-ins</h3>
+        <table class="creds">
+          <thead><tr><th scope="col">Workspace</th><th scope="col">Email</th><th scope="col">What you get</th></tr></thead>
+          <tbody>
+            <tr><td>demo</td><td><code>demo@railway.demo</code></td><td>Growth: 12 trains, 48 bookings, 4 roles</td></tr>
+            <tr><td>northline</td><td><code>owner@northline.demo</code></td><td>Enterprise: 20 trains, 5 members</td></tr>
+            <tr><td>starter</td><td><code>owner@starter.demo</code></td><td>Starter limits: 2 trains, 2 members</td></tr>
+          </tbody>
+        </table>
+        <p class="start-note">Password for every seeded account: <code style="font-size:11px">demo1234</code>. The workspace slug is the first word in the table. Northline's other members include ops@, revenue@, agent@ and viewer@.</p>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer class="footer">
+  <div class="wrap footer-inner">
+    <div class="footer-brand">
+      <a class="brand" href="#top"><span class="logo" aria-hidden="true">R</span>RailFlow</a>
+      <p>Every seat. Every train. One workspace. Multi-tenant railway operations, built to be trusted with the last seat.</p>
+    </div>
+    <nav aria-label="Footer">
+      <a href="#features">Features</a>
+      <a href="#screens">Screens</a>
+      <a href="#plans">Plans</a>
+      <a href="#learn">Beginner guide</a>
+      <a href="#quiz">Quiz</a>
+      <a href="#top">Back to top</a>
+    </nav>
+  </div>
+  <div class="wrap footer-bottom">
+    <span>© 2026 RailFlow. Proprietary software.</span>
+    <span>Screens and figures come from the seeded demo workspaces.</span>
+  </div>
+</footer>
+
+<dialog class="lightbox" id="lightbox" aria-labelledby="lightbox-title">
+  <figure>
+    <img id="lightbox-img" alt="">
+    <figcaption><span id="lightbox-title"></span><button type="button" id="lightbox-close">Close</button></figcaption>
+  </figure>
+</dialog>
+
+<script>
+(() => {
+  const questions = [
+    {
+      q: "What is a workspace in RailFlow?",
+      options: ["A folder for spreadsheet exports", "One company's isolated account", "A train's seating chart", "A browser tab"],
+      answer: 1,
+      why: "A workspace holds one company's users, trains, bookings, branding and plan. Row-level security keeps every workspace separate."
+    },
+    {
+      q: "What does PNR stand for?",
+      options: ["Passenger Name Record", "Public Network Route", "Platform Number Registry", "Price Negotiation Rate"],
+      answer: 0,
+      why: "The Passenger Name Record is the short reference for a booking — the code a passenger quotes at the desk."
+    },
+    {
+      q: "Two agents sell the last seat at the same moment. What happens?",
+      options: ["Both bookings succeed", "The system crashes", "One succeeds, the other gets a clear “not enough seats” answer", "Both are queued until tomorrow"],
+      answer: 2,
+      why: "Checkout locks the inventory row for that train and date. The second request fails cleanly with the seats left, so the seat is never sold twice."
+    },
+    {
+      q: "What is inventory?",
+      options: ["The number of trains in the fleet", "Seats available on a specific train and date", "The list of staff", "Monthly revenue"],
+      answer: 1,
+      why: "Inventory is capacity minus live bookings, counted per train and per date. Tuesday can be sold out while Wednesday is empty."
+    },
+    {
+      q: "A new counter seller joins. Which role fits?",
+      options: ["Owner", "Manager", "Agent", "Viewer"],
+      answer: 2,
+      why: "Agents sell, change and cancel bookings. Managers also manage trains and invites; Owners control everything; Viewers are read-only."
+    },
+    {
+      q: "Where do you confirm who cancelled a booking and from which IP?",
+      options: ["The dashboard", "The audit log", "Billing", "Settings"],
+      answer: 1,
+      why: "The audit log records actor, action, entity, IP and payload for bookings, users and settings changes, with filters by date."
+    },
+    {
+      q: "Which plan unlocks the audit log, team roles and a custom domain?",
+      options: ["Starter", "Growth or Enterprise", "None — they are always on", "Enterprise only"],
+      answer: 1,
+      why: "Starter covers the basics. Growth adds advanced reports, CSV export, audit access, role management and a custom domain; Enterprise removes the quotas."
+    },
+    {
+      q: "What stops one company from reading another company's data?",
+      options: ["Different browser themes", "PostgreSQL row-level security", "Hiding the menu", "Separate spreadsheets"],
+      answer: 1,
+      why: "Every tenant-scoped table is protected by PostgreSQL row-level security, and API queries run scoped to the signed-in workspace."
+    }
+  ];
+
+  const quiz = document.querySelector("[data-quiz]");
+  if (!quiz) return;
+  let index = 0;
+  let score = 0;
+  let answered = false;
+
+  const letters = "ABCD";
+
+  function renderQuestion(shouldFocus = true) {
+    answered = false;
+    const q = questions[index];
+    quiz.innerHTML = `
+      <div class="quiz-top"><span>Question ${index + 1} of ${questions.length}</span><span class="quiz-score">Score ${score}</span></div>
+      <div class="quiz-bar" role="progressbar" aria-valuemin="0" aria-valuemax="${questions.length}" aria-valuenow="${index}" aria-label="Quiz progress"><span style="width:${(index / questions.length) * 100}%"></span></div>
+      <h3 class="quiz-q" id="quiz-question">${q.q}</h3>
+      <div class="quiz-options" role="group" aria-labelledby="quiz-question">
+        ${q.options.map((option, i) => `<button class="opt" type="button" data-index="${i}"><span class="opt-key" aria-hidden="true">${letters[i]}</span><span>${option}</span></button>`).join("")}
+      </div>
+      <div class="quiz-feedback" aria-live="polite"></div>
+      <div class="quiz-actions"><button class="btn btn-primary quiz-next" type="button" hidden>${index === questions.length - 1 ? "See my score" : "Next question"}</button></div>
+    `;
+    if (shouldFocus) {
+      const heading = quiz.querySelector("#quiz-question");
+      heading.setAttribute("tabindex", "-1");
+      heading.focus({ preventScroll: true });
+    }
+  }
+
+  function choose(picked) {
+    if (answered) return;
+    answered = true;
+    const q = questions[index];
+    const correct = picked === q.answer;
+    if (correct) score += 1;
+    const buttons = quiz.querySelectorAll(".opt");
+    buttons.forEach((button) => {
+      button.disabled = true;
+      const i = Number(button.dataset.index);
+      if (i === q.answer) button.classList.add("correct");
+      if (i === picked && !correct) button.classList.add("wrong");
+    });
+    const feedback = quiz.querySelector(".quiz-feedback");
+    feedback.classList.add("show", correct ? "ok" : "no");
+    feedback.innerHTML = correct
+      ? `<strong>Correct.</strong> ${q.why}`
+      : `<strong>Not quite.</strong> The answer is ${letters[q.answer]}. ${q.why}`;
+    const bar = quiz.querySelector(".quiz-bar");
+    bar.setAttribute("aria-valuenow", String(index + 1));
+    bar.querySelector("span").style.width = `${((index + 1) / questions.length) * 100}%`;
+    const scoreLabel = quiz.querySelector(".quiz-score");
+    if (scoreLabel) scoreLabel.textContent = `Score ${score}`;
+    const next = quiz.querySelector(".quiz-next");
+    next.hidden = false;
+    next.focus({ preventScroll: true });
+  }
+
+  function showResult() {
+    const tiers = [
+      { min: 8, title: "RailFlow professional", note: "Eight for eight. You could run the demo desk on day one — and explain it to the next person." },
+      { min: 6, title: "Platform operator", note: "Strong. Revisit inventory and roles and there is nothing left to trip you up." },
+      { min: 4, title: "Station regular", note: "You know the vocabulary. One run-through of the demo will make the rest click." },
+      { min: 0, title: "Curious traveller", note: "Start with the four concepts above, then come back — the second pass is always easier." }
+    ];
+    const tier = tiers.find((item) => score >= item.min);
+    const pct = Math.round((score / questions.length) * 100);
+    quiz.innerHTML = `
+      <div class="quiz-result">
+        <div class="ring" style="--pct:${pct}"><b>${score}/${questions.length}</b></div>
+        <p class="quiz-eyebrow">Your result</p>
+        <h3 tabindex="-1">${tier.title}</h3>
+        <p>${tier.note}</p>
+        <button class="btn btn-ghost" type="button" data-restart>Try again</button>
+        <div class="quiz-actions" style="justify-content:center"><a class="btn btn-primary" href="#start">Run the demo</a></div>
+      </div>
+    `;
+    const heading = quiz.querySelector("h3");
+    heading.focus({ preventScroll: true });
+  }
+
+  quiz.addEventListener("click", (event) => {
+    const option = event.target.closest(".opt");
+    if (option && !answered) {
+      choose(Number(option.dataset.index));
+      return;
+    }
+    if (event.target.closest(".quiz-next")) {
+      if (index === questions.length - 1) showResult();
+      else { index += 1; renderQuestion(); }
+      return;
+    }
+    if (event.target.closest("[data-restart]")) {
+      index = 0;
+      score = 0;
+      renderQuestion();
+    }
+  });
+
+  renderQuestion(false);
+
+  const lightbox = document.getElementById("lightbox");
+  const lightboxImg = document.getElementById("lightbox-img");
+  const lightboxTitle = document.getElementById("lightbox-title");
+  document.querySelectorAll("[data-shot]").forEach((button) => {
+    button.addEventListener("click", () => {
+      lightboxImg.src = button.dataset.shot;
+      lightboxImg.alt = button.querySelector("img").alt;
+      lightboxTitle.textContent = button.dataset.title;
+      lightbox.showModal();
+    });
+  });
+  document.getElementById("lightbox-close").addEventListener("click", () => lightbox.close());
+  lightbox.addEventListener("click", (event) => {
+    if (event.target === lightbox) lightbox.close();
+  });
+
+  const copyButton = document.querySelector("[data-copy]");
+  const copyStatus = document.querySelector("[data-copy-status]");
+  const command = "cp .env.example .env\nmake up\nopen http://localhost:8080";
+  copyButton.addEventListener("click", async () => {
+    const original = copyButton.textContent;
+    try {
+      await navigator.clipboard.writeText(command);
+      copyButton.textContent = "Copied";
+      copyStatus.textContent = "Commands copied to the clipboard.";
+    } catch {
+      copyButton.textContent = "Select and copy";
+      copyStatus.textContent = "Copy the commands from the block above.";
+    }
+    setTimeout(() => { copyButton.textContent = original; }, 2000);
+  });
+
+  const reveals = document.querySelectorAll(".reveal");
+  if ("IntersectionObserver" in window && !window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add("in");
+          observer.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.12 });
+    reveals.forEach((element) => observer.observe(element));
+  } else {
+    reveals.forEach((element) => element.classList.add("in"));
+  }
+})();
+</script>
+</body>
+</html>

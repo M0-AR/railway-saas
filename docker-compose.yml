@@ -1,0 +1,101 @@
+name: railway-saas
+
+services:
+  db:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-railway}
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      RAILWAY_OWNER_PASSWORD: ${RAILWAY_OWNER_PASSWORD:-railway_owner_pw}
+      RAILWAY_APP_PASSWORD: ${RAILWAY_APP_PASSWORD:-railway_app_pw}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./infra/postgres/init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-railway}"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+    restart: unless-stopped
+
+  redis:
+    image: redis:8-alpine
+    command: ["redis-server", "--save", "", "--appendonly", "no"]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+    restart: unless-stopped
+
+  migrate:
+    build: ./backend
+    command: ["alembic", "upgrade", "head"]
+    environment: &backend_env
+      ENVIRONMENT: ${ENVIRONMENT:-local}
+      SECRET_KEY: ${SECRET_KEY:-dev-only-secret-change-me-0123456789abcdef}
+      DATABASE_URL: postgresql+asyncpg://railway_app:${RAILWAY_APP_PASSWORD:-railway_app_pw}@db:5432/${POSTGRES_DB:-railway}
+      MIGRATION_DATABASE_URL: postgresql+asyncpg://railway_owner:${RAILWAY_OWNER_PASSWORD:-railway_owner_pw}@db:5432/${POSTGRES_DB:-railway}
+      REDIS_URL: ${REDIS_URL:-redis://redis:6379/0}
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: "no"
+
+  backend:
+    build: ./backend
+    environment:
+      <<: *backend_env
+      APP_DOMAIN: ${APP_DOMAIN:-localhost}
+      CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:8080,http://localhost:3000}
+      SEED_DEMO: ${SEED_DEMO:-true}
+      # Local/demo stack defaults are deliberately permissive; production sets
+      # tighter budgets explicitly. E2E parity requires headroom for parallel logins.
+      RATE_LIMIT_PER_MINUTE: ${RATE_LIMIT_PER_MINUTE:-10000}
+      AUTH_RATE_LIMIT_PER_MINUTE: ${AUTH_RATE_LIMIT_PER_MINUTE:-1000}
+      STRIPE_WEBHOOK_SECRET: ${STRIPE_WEBHOOK_SECRET:-}
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+    restart: unless-stopped
+
+  frontend:
+    build: ./frontend
+    environment:
+      NODE_ENV: production
+      API_INTERNAL_URL: http://backend:8000
+      NEXT_PUBLIC_API_BASE: /api/v1
+      APP_DOMAIN: ${APP_DOMAIN:-localhost}
+    depends_on:
+      backend:
+        condition: service_started
+    restart: unless-stopped
+
+  caddy:
+    image: caddy:2-alpine
+    ports:
+      - "${HTTP_PORT:-8080}:80"
+      - "${HTTPS_PORT:-8443}:443"
+      - "${HTTPS_PORT:-8443}:443/udp"
+    environment:
+      SITE_ADDRESS: ${SITE_ADDRESS:-http://localhost:8080}
+    volumes:
+      - ./infra/caddy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      backend:
+        condition: service_started
+      frontend:
+        condition: service_started
+    restart: unless-stopped
+
+volumes:
+  pgdata:
+  caddy_data:
+  caddy_config:
